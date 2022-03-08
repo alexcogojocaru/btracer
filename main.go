@@ -7,12 +7,14 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
+	"google.golang.org/grpc"
 
-	bspan "github.com/alexcogojocaru/btracer/proto-gen/btrace_span"
+	bagent "github.com/alexcogojocaru/btracer/proto-gen/btrace_agent"
 )
 
 type Exporter struct {
-	Mutex sync.Mutex
+	Mutex  sync.Mutex
+	Client bagent.AgentServiceClient
 }
 
 type Context struct {
@@ -26,14 +28,14 @@ type Span struct {
 	ParentContext  Context
 }
 
-func NormalizeSpan(span trace.ReadOnlySpan) bspan.Span {
-	return bspan.Span{
+func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
+	return bagent.Span{
 		Name: span.Name(),
-		CurrentContext: &bspan.Context{
+		CurrentContext: &bagent.Context{
 			TraceID: span.SpanContext().TraceID().String(),
 			SpanID:  span.SpanContext().SpanID().String(),
 		},
-		ParentContext: &bspan.Context{
+		ParentContext: &bagent.Context{
 			TraceID: span.Parent().TraceID().String(),
 			SpanID:  span.Parent().SpanID().String(),
 		},
@@ -41,15 +43,29 @@ func NormalizeSpan(span trace.ReadOnlySpan) bspan.Span {
 }
 
 func NewExporter() (trace.SpanExporter, error) {
-	return &Exporter{}, nil
+	conn, err := grpc.Dial("localhost:4576", grpc.WithInsecure())
+	if err != nil {
+		log.Fatal("Cannot dial localhost:4576")
+	}
+
+	client := bagent.NewAgentServiceClient(conn)
+
+	return &Exporter{Client: client}, nil
 }
 
 func (e *Exporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) error {
 	e.Mutex.Lock()
+
+	var batch []*bagent.Span
 	for _, span := range spans {
-		// log.Print(NormalizeSpan(span))
-		log.Print(span.StartTime().Month().String())
+		var bSpan bagent.Span = NormalizeSpan(span)
+		// log.Print(span.StartTime().Month().String())
+		e.Client.StreamSpan(ctx, &bSpan)
+		batch = append(batch, &bSpan)
 	}
+
+	e.Client.StreamBatch(ctx, &bagent.BatchSpan{Spans: batch})
+
 	e.Mutex.Unlock()
 
 	return nil
