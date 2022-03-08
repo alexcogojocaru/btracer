@@ -7,6 +7,8 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
+
+	bspan "github.com/alexcogojocaru/btracer/proto-gen/btrace_span"
 )
 
 type Exporter struct {
@@ -24,16 +26,16 @@ type Span struct {
 	ParentContext  Context
 }
 
-func NormalizeSpan(readSpan trace.ReadOnlySpan) Span {
-	return Span{
-		Name: readSpan.Name(),
-		CurrentContext: Context{
-			TraceID: readSpan.SpanContext().TraceID().String(),
-			SpanID:  readSpan.SpanContext().SpanID().String(),
+func NormalizeSpan(span trace.ReadOnlySpan) bspan.Span {
+	return bspan.Span{
+		Name: span.Name(),
+		CurrentContext: &bspan.Context{
+			TraceID: span.SpanContext().TraceID().String(),
+			SpanID:  span.SpanContext().SpanID().String(),
 		},
-		ParentContext: Context{
-			TraceID: readSpan.Parent().TraceID().String(),
-			SpanID:  readSpan.Parent().SpanID().String(),
+		ParentContext: &bspan.Context{
+			TraceID: span.Parent().TraceID().String(),
+			SpanID:  span.Parent().SpanID().String(),
 		},
 	}
 }
@@ -45,7 +47,8 @@ func NewExporter() (trace.SpanExporter, error) {
 func (e *Exporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpan) error {
 	e.Mutex.Lock()
 	for _, span := range spans {
-		log.Print(NormalizeSpan(span))
+		// log.Print(NormalizeSpan(span))
+		log.Print(span.StartTime().Month().String())
 	}
 	e.Mutex.Unlock()
 

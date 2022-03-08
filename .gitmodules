@@ -1,3 +1,6 @@
 [submodule "btrace-idl"]
 	path = btrace-idl
 	url = https://github.com/alexcogojocaru/btrace-idl.git
+[submodule "btrace-agent"]
+	path = btrace-agent
+	url = https://github.com/alexcogojocaru/btrace-agent.git
