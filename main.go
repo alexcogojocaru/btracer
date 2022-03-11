@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
 
+	bee "github.com/alexcogojocaru/btracer/exporters/bee"
 	bagent "github.com/alexcogojocaru/btracer/proto-gen/btrace_agent"
 )
 
@@ -77,12 +78,14 @@ func (e *Exporter) Shutdown(ctx context.Context) error {
 }
 
 func main() {
-	exporter, err := NewExporter()
-	if err != nil {
-		log.Fatal("Error when creating the exporter")
-	}
+	// exporter, err := NewExporter()
+	// if err != nil {
+	// 	log.Fatal("Error when creating the exporter")
+	// }
 
-	traceProvider := trace.NewTracerProvider(trace.WithBatcher(exporter))
+	beeExporter, _ := bee.NewBeeExporter()
+
+	traceProvider := trace.NewTracerProvider(trace.WithBatcher(beeExporter))
 	defer func() {
 		if err := traceProvider.Shutdown(context.Background()); err != nil {
 			log.Fatal(err)
