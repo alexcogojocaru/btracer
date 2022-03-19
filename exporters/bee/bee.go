@@ -2,6 +2,7 @@ package bee
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -13,6 +14,11 @@ import (
 
 type BeeExporter struct {
 	Client bagent.AgentServiceClient
+}
+
+type AgentConfig struct {
+	Host string
+	Port int
 }
 
 func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
@@ -29,10 +35,12 @@ func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
 	}
 }
 
-func NewBeeExporter() (trace.SpanExporter, error) {
-	conn, err := grpc.Dial("localhost:4576", grpc.WithInsecure())
+func NewBeeExporter(agentConfig *AgentConfig) (trace.SpanExporter, error) {
+	agentHost := fmt.Sprintf("%s:%d", agentConfig.Host, agentConfig.Port)
+
+	conn, err := grpc.Dial(agentHost, grpc.WithInsecure())
 	if err != nil {
-		log.Fatal("Cannot dial localhost:4576")
+		log.Fatalf("Cannot dial %s", agentHost)
 	}
 
 	client := bagent.NewAgentServiceClient(conn)

@@ -11,7 +11,8 @@ import (
 )
 
 func main() {
-	beeExporter, _ := bee.NewBeeExporter()
+	agentConfig := bee.AgentConfig{Host: "localhost", Port: 4576}
+	beeExporter, _ := bee.NewBeeExporter(&agentConfig)
 
 	traceProvider := trace.NewTracerProvider(trace.WithBatcher(beeExporter))
 	defer func() {
