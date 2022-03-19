@@ -14,9 +14,9 @@ func ping(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte("dasdasdad"))
 }
 
-func functionPointer(fp func(http.ResponseWriter, *http.Request)) (func(http.ResponseWriter, *http.Request), error) {
-	
-}
+// func functionPointer(fp func(http.ResponseWriter, *http.Request)) (func(http.ResponseWriter, *http.Request), error) {
+
+// }
 
 func main() {
 	http.HandleFunc("/", ping)
