@@ -24,6 +24,9 @@ func main() {
 	otel.SetTracerProvider(traceProvider)
 	tracer := otel.Tracer("BTracer")
 
-	_, span := tracer.Start(context.Background(), "Main")
-	defer span.End()
+	otelCtx, span := tracer.Start(context.Background(), "Main")
+	span.End()
+
+	_, span2 := tracer.Start(otelCtx, "Main2")
+	defer span2.End()
 }
