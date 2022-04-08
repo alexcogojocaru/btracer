@@ -25,8 +25,7 @@ func main() {
 	tracer := otel.Tracer("BTracer")
 
 	otelCtx, span := tracer.Start(context.Background(), "Main")
+	_, span1 := tracer.Start(otelCtx, "SubMain")
+	span1.End()
 	span.End()
-
-	_, span2 := tracer.Start(otelCtx, "Main2")
-	defer span2.End()
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func Request(url string, ctx context.Context) (*http.Response, error) {
+func Request(ctx context.Context, url string) (*http.Response, error) {
 	log.Print(ctx)
 	resp, err := http.Get(url)
 	return resp, err

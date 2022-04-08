@@ -25,7 +25,17 @@ func NewHandler(handler http.Handler, operation string) http.Handler {
 	return h
 }
 
+func NewHandlerFunc(fp func(http.ResponseWriter, *http.Request), operation string) http.Handler {
+	h := &Handler{
+		Handler:   http.HandlerFunc(fp),
+		Operation: operation,
+	}
+
+	return h
+}
+
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// this is a middleware: every request passes through this function
 	log.Print(h.Operation)
 	h.Handler.ServeHTTP(w, req)
 }

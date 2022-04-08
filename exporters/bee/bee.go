@@ -7,6 +7,7 @@ import (
 
 	"go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	bagent "github.com/alexcogojocaru/btracer/proto-gen/btrace_agent"
 )
@@ -61,7 +62,7 @@ func (e *BeeExporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpa
 		// Send a grpc request with metadata injected in the request
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 
-		// ctx = metadata.AppendToOutgoingContext(ctx, "key1", "val1", "key2", "val2")
+		ctx = metadata.AppendToOutgoingContext(ctx, "key1", "val1", "key2", "val2")
 		e.Client.StreamSpan(ctx, &bSpan)
 	}
 
