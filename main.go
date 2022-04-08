@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
 
 	bee "github.com/alexcogojocaru/btracer/exporters/bee"
@@ -22,10 +23,21 @@ func main() {
 	}()
 
 	otel.SetTracerProvider(traceProvider)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
+	// propagation.TraceContext{}.Extract(context.Background(), )
+
+	// bag := propagation.Baggage{}
+	// textMap := propagation.TextMapPropagator{}
+	// bag.Inject(context.Background(), textMap)
 	tracer := otel.Tracer("BTracer")
 
 	otelCtx, span := tracer.Start(context.Background(), "Main")
+	defer span.End()
+
 	_, span1 := tracer.Start(otelCtx, "SubMain")
-	span1.End()
-	span.End()
+	defer span1.End()
 }

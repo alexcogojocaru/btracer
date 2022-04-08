@@ -36,6 +36,6 @@ func NewHandlerFunc(fp func(http.ResponseWriter, *http.Request), operation strin
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// this is a middleware: every request passes through this function
-	log.Print(h.Operation)
+	log.Print(req.Header)
 	h.Handler.ServeHTTP(w, req)
 }

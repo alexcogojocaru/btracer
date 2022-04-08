@@ -12,23 +12,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 )
 
-func makeRequest(ctx context.Context) {
-	client := http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:8090/ping", nil)
-	if err != nil {
-		panic(err)
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	res.Body.Close()
-}
-
 func main() {
 	agentConfig := bee.AgentConfig{Host: "localhost", Port: 4576}
 	beeExporter, _ := bee.NewBeeExporter(&agentConfig)
@@ -44,16 +27,15 @@ func main() {
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	// tracer := otel.Tracer("BTracer")
 
-	makeRequest(context.Background())
 	// ctx, span := tracer.Start(context.Background(), "Main")
 	// defer span.End()
 
-	// req, _ := http.NewRequestWithContext(ctx, "GET", "http://localhost:8090/ping", nil)
-	// httpClient := &http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
-	// _, err := httpClient.Do(req)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	req, _ := http.NewRequestWithContext(context.Background(), "GET", "http://localhost:8090/ping", nil)
+	httpClient := &http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
+	_, err := httpClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// resp, err := bhttp.Request(otelCtx, "http://localhost:8090/ping")
 	// if err != nil {
