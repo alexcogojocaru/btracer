@@ -11,14 +11,13 @@ type Carrier struct {
 }
 
 type Propagator interface {
-	Inject(ctx context.Context, bagent.Span) error
+	Inject(ctx context.Context, span bagent.Span) error
 	Extract(ctx context.Context) error
 }
 
 type propagator struct {
-
 }
 
-func (p *propagator) Inject(ctx context.Context, bagent.Span) {
+func (p *propagator) Inject(ctx context.Context, span bagent.Span) {
 
 }

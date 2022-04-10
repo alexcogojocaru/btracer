@@ -62,7 +62,8 @@ func (e *BeeExporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpa
 		// Send a grpc request with metadata injected in the request
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 
-		log.Print(bSpan)
+		log.Printf("%s %s", bSpan.CurrentContext.TraceID, bSpan.CurrentContext.SpanID)
+
 		ctx = metadata.AppendToOutgoingContext(ctx, "key1", "val1", "key2", "val2")
 		e.Client.StreamSpan(ctx, &bSpan)
 	}
