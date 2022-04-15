@@ -12,11 +12,5 @@ func ping(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.Handle("/ping", bhttp.NewHandler(http.HandlerFunc(ping), "Ping"))
-	// http.Handle("/ping", bhttp.NewHandlerFunc(ping, "Ping"))
-
-	// handler := http.HandlerFunc(ping)
-	// wrappedHandler := otelhttp.NewHandler(handler, "/ping")
-
-	// http.Handle("/ping", wrappedHandler)
 	http.ListenAndServe(":8090", nil)
 }

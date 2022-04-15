@@ -11,7 +11,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
-	otel_trace "go.opentelemetry.io/otel/trace"
+
+	btrace_propagation "github.com/alexcogojocaru/btracer/propagation"
 )
 
 type SpanConfig struct {
@@ -22,7 +23,7 @@ type SpanConfig struct {
 
 // [version]-[trace-id]-[parent-id]-[trace-flags]
 func Extract(traceparentHeader string) SpanConfig {
-	split := strings.Split(traceparentHeader, " ")
+	split := strings.Split(traceparentHeader, "-")
 
 	spanConfig := SpanConfig{
 		TraceID:    split[1],
@@ -53,7 +54,9 @@ func main() {
 
 	req, _ := http.NewRequestWithContext(ctx, "GET", "http://localhost:8090/ping", nil)
 
-	httpClient := &http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
+	httpClient := &http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
 
 	_, err := httpClient.Do(req)
 	if err != nil {
@@ -61,33 +64,8 @@ func main() {
 	}
 
 	// currentSpan -> req.Header["Traceparent"] -> new generated span
-	log.Print(req.Header["Traceparent"][0]) // this is the intermediary span between 2 microservices
+	propagator := btrace_propagation.NewPropagator()
+	spanConfig, _ := propagator.Extract(ctx, req.Header)
 
-	extractedData := Extract(req.Header["Traceparent"][0])
-
-	traceID, _ := otel_trace.TraceIDFromHex(extractedData.TraceID)
-	spanID, _ := otel_trace.SpanIDFromHex(extractedData.SpanID)
-
-	// traceID, _ := otel_trace.TraceIDFromHex(req.Header["Traceparent"][0])
-
-	spanContext := otel_trace.NewSpanContext(otel_trace.SpanContextConfig{
-		TraceID:    traceID,
-		SpanID:     spanID,
-		TraceFlags: otel_trace.FlagsSampled,
-	})
-
-	log.Print(spanContext)
-
-	// contex := otel_trace.ContextWithSpanContext(ctx, spanContext)
-	// _, span_1 := tracer.Start(contex, "Hello")
-	// defer span_1.End()
-
-	// log.Print(spanContext)
-
-	// resp, err := bhttp.Request(otelCtx, "http://localhost:8090/ping")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// log.Print(resp)
+	log.Print(spanConfig)
 }
