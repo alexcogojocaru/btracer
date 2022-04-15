@@ -15,7 +15,7 @@ const TRACEPARENT_SEPARATOR = "-"
 const EMPTY_STRING = ""
 
 type Propagator interface {
-	Inject(ctx context.Context) (http.Client, error)
+	Inject(ctx context.Context, client *http.Client) error
 	Extract(ctx context.Context, req http.Header) (SpanConfig, error)
 }
 
@@ -32,12 +32,15 @@ func NewPropagator() *propagator {
 	return &propagator{}
 }
 
-func (p *propagator) Inject(ctx context.Context) (http.Client, error) {
-	return http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}, nil
+func (p *propagator) Inject(ctx context.Context, client *http.Client) error {
+	// return http.Client{
+	// 	Transport: otelhttp.NewTransport(http.DefaultTransport),
+	// }, nil
+	client.Transport = otelhttp.NewTransport(http.DefaultTransport)
+	return nil
 }
 
+// [version]-[trace-id]-[parent-id]-[trace-flags]
 func (p *propagator) Extract(ctx context.Context, req http.Header) (SpanConfig, error) {
 	traceParentHeader := req.Get(TRACEPARENT_HEADER)
 	if traceParentHeader == EMPTY_STRING {

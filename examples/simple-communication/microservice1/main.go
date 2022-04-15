@@ -4,10 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/alexcogojocaru/btracer/exporters/bee"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -19,19 +17,6 @@ type SpanConfig struct {
 	TraceID    string
 	SpanID     string
 	TraceFlags string
-}
-
-// [version]-[trace-id]-[parent-id]-[trace-flags]
-func Extract(traceparentHeader string) SpanConfig {
-	split := strings.Split(traceparentHeader, "-")
-
-	spanConfig := SpanConfig{
-		TraceID:    split[1],
-		SpanID:     split[2],
-		TraceFlags: split[3],
-	}
-
-	return spanConfig
 }
 
 func main() {
@@ -55,17 +40,18 @@ func main() {
 	req, _ := http.NewRequestWithContext(ctx, "GET", "http://localhost:8090/ping", nil)
 
 	httpClient := &http.Client{
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
+		// Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
 
+	// currentSpan -> req.Header["Traceparent"] -> new generated span
+	propagator := btrace_propagation.NewPropagator()
+
+	propagator.Inject(ctx, httpClient)
 	_, err := httpClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// currentSpan -> req.Header["Traceparent"] -> new generated span
-	propagator := btrace_propagation.NewPropagator()
 	spanConfig, _ := propagator.Extract(ctx, req.Header)
-
 	log.Print(spanConfig)
 }
