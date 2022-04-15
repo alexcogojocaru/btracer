@@ -39,9 +39,7 @@ func main() {
 
 	req, _ := http.NewRequestWithContext(ctx, "GET", "http://localhost:8090/ping", nil)
 
-	httpClient := &http.Client{
-		// Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}
+	httpClient := &http.Client{}
 
 	// currentSpan -> req.Header["Traceparent"] -> new generated span
 	propagator := btrace_propagation.NewPropagator()
