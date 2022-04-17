@@ -1,10 +1,13 @@
 package http
 
 import (
+	"context"
 	"log"
 	"net/http"
 
+	"github.com/alexcogojocaru/btracer/exporters/bee"
 	btrace_propagation "github.com/alexcogojocaru/btracer/propagation"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
 	otel_trace "go.opentelemetry.io/otel/trace"
 )
@@ -16,17 +19,33 @@ type Handler struct {
 	Operation  string
 	Exporter   trace.SpanExporter
 	Propagator btrace_propagation.Propagator
+	Tracer     otel_trace.Tracer
+}
+
+func InitTraceProvider(ctx context.Context) {
+	agentConfig := bee.AgentConfig{Host: "localhost", Port: 4576}
+	beeExporter, _ := bee.NewBeeExporter(&agentConfig)
+
+	traceProvider := trace.NewTracerProvider(trace.WithBatcher(beeExporter))
+	defer func() {
+		if err := traceProvider.Shutdown(ctx); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	otel.SetTracerProvider(traceProvider)
 }
 
 func NewHandler(handler http.Handler, operation string) http.Handler {
-	h := &Handler{
+	// InitTraceProvider(context.Background())
+
+	return &Handler{
 		Handler:   handler,
 		Operation: operation,
 		// Exporter:  exporter,
 		Propagator: btrace_propagation.NewPropagator(),
+		Tracer:     otel.Tracer(""),
 	}
-
-	return h
 }
 
 func NewHandlerFunc(fp func(http.ResponseWriter, *http.Request), operation string) http.Handler {
@@ -50,7 +69,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	ctx := otel_trace.ContextWithSpanContext(req.Context(), spanContext)
 	req = req.WithContext(ctx)
-	log.Print(spanConfig)
 
+	_, span := h.Tracer.Start(ctx, "Name")
 	h.Handler.ServeHTTP(w, req)
+
+	span.End()
 }

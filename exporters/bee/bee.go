@@ -32,11 +32,11 @@ func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
 			TraceID: span.Parent().TraceID().String(),
 			SpanID:  span.Parent().SpanID().String(),
 		},
-		// Timestamp: &bagent.Timestamp{
-		// 	Started:  span.StartTime().String(),
-		// 	Ended:    span.EndTime().String(),
-		// 	Duration: 1,
-		// },
+		Timestamp: &bagent.Timestamp{
+			Started:  span.StartTime().String(),
+			Ended:    span.EndTime().String(),
+			Duration: 1,
+		},
 	}
 }
 
