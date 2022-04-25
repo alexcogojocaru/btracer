@@ -2,6 +2,7 @@ package trace
 
 import (
 	"hash"
+	"math/rand"
 	"time"
 )
 
@@ -13,15 +14,10 @@ func GetCurrentTimestamp() int64 {
 	return time.Now().Unix()
 }
 
-func (e *Encoder) Compute(item ...string) []byte {
-	encodedString := ""
-	for _, element := range item {
-		encodedString += element
-	}
+func (e *Encoder) Compute() []byte {
+	token := make([]byte, 16)
+	rand.Seed(GetCurrentTimestamp())
+	rand.Read(token)
 
-	e.Hash.Sum([]byte(encodedString))
-	encoded := e.Hash.Sum(nil)
-	e.Hash.Reset()
-
-	return encoded
+	return token
 }

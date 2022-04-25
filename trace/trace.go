@@ -1,19 +1,17 @@
 package trace
 
-import (
-	"fmt"
-	"time"
-)
-
 type ReadTrace interface {
 	GenerateID() []byte
 }
 
 type Trace struct {
+	Encoder Encoder
+	TraceID [16]byte
 }
 
 func (t *Trace) GenerateID() []byte {
-	timestamp := time.Now().Unix()
-	encoded := []byte(fmt.Sprint(timestamp))
-	return encoded
+	token := t.Encoder.Compute()
+	copy(t.TraceID[:], token)
+
+	return token
 }
