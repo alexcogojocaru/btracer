@@ -22,6 +22,8 @@ type AgentConfig struct {
 }
 
 func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
+	totalTime := span.EndTime().UnixMicro() - span.StartTime().UnixMicro()
+
 	return bagent.Span{
 		Name: span.Name(),
 		CurrentContext: &bagent.Context{
@@ -35,7 +37,7 @@ func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
 		Timestamp: &bagent.Timestamp{
 			Started:  span.StartTime().String(),
 			Ended:    span.EndTime().String(),
-			Duration: 1,
+			Duration: float32(totalTime),
 		},
 	}
 }
@@ -62,7 +64,7 @@ func (e *BeeExporter) ExportSpans(ctx context.Context, spans []trace.ReadOnlySpa
 		// Send a grpc request with metadata injected in the request
 		// https://github.com/grpc/grpc-go/blob/master/Documentation/grpc-metadata.md
 
-		log.Printf("%s %s %s", bSpan.CurrentContext.TraceID, bSpan.CurrentContext.SpanID, bSpan.ParentContext.SpanID)
+		log.Printf("%s %s %s %f", bSpan.CurrentContext.TraceID, bSpan.CurrentContext.SpanID, bSpan.ParentContext.SpanID, bSpan.Timestamp.Duration)
 
 		ctx = metadata.AppendToOutgoingContext(ctx, "key1", "val1", "key2", "val2")
 		e.Client.StreamSpan(ctx, &bSpan)
