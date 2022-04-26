@@ -22,7 +22,7 @@ type AgentConfig struct {
 }
 
 func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
-	totalTime := span.EndTime().UnixMicro() - span.StartTime().UnixMicro()
+	// totalTime := span.EndTime().UnixMicro() - span.StartTime().UnixMicro()
 
 	return bagent.Span{
 		Name: span.Name(),
@@ -37,7 +37,7 @@ func NormalizeSpan(span trace.ReadOnlySpan) bagent.Span {
 		Timestamp: &bagent.Timestamp{
 			Started:  span.StartTime().String(),
 			Ended:    span.EndTime().String(),
-			Duration: float32(totalTime),
+			Duration: 1,
 		},
 	}
 }
