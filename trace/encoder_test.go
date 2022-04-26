@@ -12,7 +12,7 @@ func TestEncoderHashing(t *testing.T) {
 	encoder := trace.Encoder{
 		Hash: sha1.New(),
 	}
-	token := encoder.Compute()
+	token := encoder.Compute(16)
 
 	t.Logf("bytes=%x", token)
 	t.Logf("string=%s", hex.EncodeToString(token))

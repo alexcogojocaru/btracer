@@ -1,19 +1,19 @@
 package trace
 
+import "encoding/hex"
+
 type ReadTrace interface {
 	GenerateID() []byte
 }
 
-type TID [16]byte
+const DEFAULT_TRACE_BYTES_SIZE = 16
 
-type Trace struct {
-	Encoder Encoder
-	TraceID TID
+type TID [DEFAULT_TRACE_BYTES_SIZE]byte
+
+func (tid *TID) ToString() string {
+	return hex.EncodeToString(tid[:])
 }
 
-func (t *Trace) GenerateID() []byte {
-	token := t.Encoder.Compute()
-	copy(t.TraceID[:], token)
-
-	return token
+type Trace struct {
+	TraceID TID
 }
