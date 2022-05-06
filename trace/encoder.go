@@ -16,7 +16,7 @@ func GetCurrentTimestamp() int64 {
 
 func (e *Encoder) Compute(size int8) []byte {
 	token := make([]byte, size)
-	rand.Seed(GetCurrentTimestamp())
+	rand.Seed(GetCurrentTimestamp() * int64(rand.Int()))
 	rand.Read(token)
 
 	return token

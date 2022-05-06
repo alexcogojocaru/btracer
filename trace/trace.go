@@ -8,6 +8,8 @@ type ReadTrace interface {
 
 const DEFAULT_TRACE_BYTES_SIZE = 16
 
+var NullTraceID TID
+
 type TID [DEFAULT_TRACE_BYTES_SIZE]byte
 
 func (tid *TID) ToString() string {

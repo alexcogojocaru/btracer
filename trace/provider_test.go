@@ -8,7 +8,7 @@ import (
 )
 
 func TestProviderCreation(t *testing.T) {
-	tp, _ := trace.NewProvider()
+	tp := trace.NewProvider()
 
 	spanName := "TestProviderCreation"
 	ctx, span := tp.Start(context.Background(), spanName)
