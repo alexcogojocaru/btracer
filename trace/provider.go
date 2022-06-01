@@ -77,7 +77,6 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 func (tp *TraceProvider) Stream() {
 	for {
 		span := <-tp.Channel
-
 		tp.Exporter.ExportSpan(context.Background(), span)
 
 		if tp.KillSwitch == true {
