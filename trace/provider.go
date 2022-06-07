@@ -12,6 +12,7 @@ type Provider interface {
 }
 
 type TraceProvider struct {
+	ServiceName     string
 	Trace           Trace
 	Encoder         Encoder
 	SpanCount       int64
@@ -27,9 +28,10 @@ type ContextHeader struct {
 	SpanName   string
 }
 
-func NewProvider() *TraceProvider {
+func NewProvider(serviceName string) *TraceProvider {
 	exporter, _ := NewExporter(AgentConfig{Host: "localhost", Port: 4576})
 	tp := &TraceProvider{
+		ServiceName:     serviceName,
 		Channel:         make(chan Span),
 		ShutdownChannel: make(chan bool, 0),
 		KillSwitch:      false,
