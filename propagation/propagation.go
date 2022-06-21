@@ -2,62 +2,34 @@ package propagation
 
 import (
 	"context"
-	"errors"
+	"log"
 	"net/http"
-	"strings"
 
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	otel_trace "go.opentelemetry.io/otel/trace"
+	"github.com/alexcogojocaru/btracer/trace"
 )
 
-const TRACEPARENT_HEADER = "Traceparent"
+const TRACEPARENT_HEADER_TRACE = "Traceparent-TraceId"
+const TRACEPARENT_HEADER_SPAN = "Traceparent-SpanId"
 const TRACEPARENT_SEPARATOR = "-"
-const EMPTY_STRING = ""
 
-type Propagator interface {
-	Inject(ctx context.Context, client *http.Client)
-	Extract(ctx context.Context, req http.Header) (SpanConfig, error)
+type Propagation interface {
+	Inject(ctx context.Context, req *http.Request)
+	Extract(ctx context.Context, header http.Header)
 }
 
-type propagator struct{}
+type Propagator struct{}
 
-type SpanConfig struct {
-	TraceID    otel_trace.TraceID
-	SpanID     otel_trace.SpanID
-	TraceFlags otel_trace.TraceFlags
+// Injects two headers containing the traceid and spanid of the current span
+func (p *Propagator) Inject(ctx context.Context, req *http.Request) {
+	contextHeader := ctx.Value("TraceHeader").(trace.ContextHeader)
+
+	req.Header.Add(TRACEPARENT_HEADER_TRACE, contextHeader.ParentSpan.TraceID.ToString())
+	req.Header.Add(TRACEPARENT_HEADER_SPAN, contextHeader.ParentSpan.SpanID.ToString())
 }
 
-func NewPropagator() *propagator {
-	return &propagator{}
-}
+func (p *Propagator) Extract(ctx context.Context, header http.Header) {
+	traceId := header.Get(TRACEPARENT_HEADER_TRACE)
+	spanId := header.Get(TRACEPARENT_HEADER_SPAN)
 
-func (p *propagator) Inject(ctx context.Context, client *http.Client) {
-	client.Transport = otelhttp.NewTransport(http.DefaultTransport)
-}
-
-// [version]-[trace-id]-[parent-id]-[trace-flags]
-func (p *propagator) Extract(ctx context.Context, req http.Header) (SpanConfig, error) {
-	traceParentHeader := req.Get(TRACEPARENT_HEADER)
-	if traceParentHeader == EMPTY_STRING {
-		return SpanConfig{}, errors.New("Traceparent header missing from request")
-	}
-
-	headerInfo := strings.Split(traceParentHeader, TRACEPARENT_SEPARATOR)
-	trid, err := otel_trace.TraceIDFromHex(headerInfo[1])
-	if err != nil {
-		return SpanConfig{}, err
-	}
-
-	spid, err := otel_trace.SpanIDFromHex(headerInfo[2])
-	if err != nil {
-		return SpanConfig{}, err
-	}
-
-	spanConfig := SpanConfig{
-		TraceID:    trid,
-		SpanID:     spid,
-		TraceFlags: 0x1,
-	}
-
-	return spanConfig, nil
+	log.Printf("%s %s", traceId, spanId)
 }
