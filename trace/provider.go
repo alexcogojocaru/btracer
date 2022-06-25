@@ -8,14 +8,13 @@ const TRACE_HEADER = "TraceHeader"
 
 type Provider interface {
 	Start(ctx context.Context, name string) (context.Context, *Span)
-	Shutdown(ctx context.Context) error
+	Shutdown() error
 }
 
 type TraceProvider struct {
 	ServiceName     string
 	Trace           Trace
 	Encoder         Encoder
-	SpanCount       int64
 	KillSwitch      bool
 	Channel         chan Span
 	ShutdownChannel chan bool
@@ -28,8 +27,21 @@ type ContextHeader struct {
 	SpanName   string
 }
 
+type ContextSpan struct {
+	TraceID  TID
+	SpanID   SID
+	SpanName string
+}
+
 func NewProvider(serviceName string) *TraceProvider {
-	exporter, _ := NewExporter(AgentConfig{Host: "localhost", Port: 4576})
+	exporter, _ := NewExporter(
+		serviceName,
+		AgentConfig{
+			Host: "localhost",
+			Port: 4576,
+		},
+	)
+
 	tp := &TraceProvider{
 		ServiceName:     serviceName,
 		Channel:         make(chan Span),
@@ -52,27 +64,40 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 
 	if ctx.Value(TRACE_HEADER) == nil {
 		traceToken := tp.Encoder.Compute(DEFAULT_TRACE_BYTES_SIZE)
-		copy(tp.Trace.TraceID[:], traceToken)
+		// copy(tp.Trace.TraceID[:], traceToken)
 
+		// copy(span.ParentSpanID[:], NullSpanID[:])
+		// copy(span.TraceID[:], tp.Trace.TraceID[:])
+
+		copy(tp.Trace.TraceID[:], traceToken)
 		copy(span.ParentSpanID[:], NullSpanID[:])
-		copy(span.TraceID[:], tp.Trace.TraceID[:])
+		copy(span.TraceID[:], traceToken)
 	} else {
-		ctxValue := ctx.Value(TRACE_HEADER).(ContextHeader)
-		copy(span.ParentSpanID[:], ctxValue.ParentSpan.SpanID[:])
-		copy(span.TraceID[:], ctxValue.ParentSpan.TraceID[:])
+		// ctxValue := ctx.Value(TRACE_HEADER).(ContextHeader)
+		// copy(span.ParentSpanID[:], ctxValue.ParentSpan.SpanID[:])
+		// copy(span.TraceID[:], ctxValue.ParentSpan.TraceID[:])
+
+		spanContext := ctx.Value(TRACE_HEADER).(ContextSpan)
+		copy(span.ParentSpanID[:], spanContext.SpanID[:])
+		copy(span.TraceID[:], spanContext.TraceID[:])
 	}
 
 	spanToken := tp.Encoder.Compute(DEFAULT_SPAN_BYTES_SIZE)
 	copy(span.SpanID[:], spanToken)
 
-	ctx = context.WithValue(ctx, TRACE_HEADER, ContextHeader{
-		Trace:      tp.Trace,
-		ParentSpan: *span,
-		SpanName:   name,
+	// InjectIntoContext(&ctx, ContextHeader{
+	// 	Trace:      tp.Trace,
+	// 	ParentSpan: *span,
+	// 	SpanName:   name,
+	// })
+
+	InjectIntoContext(&ctx, ContextSpan{
+		TraceID:  tp.Trace.TraceID,
+		SpanID:   span.SpanID,
+		SpanName: name,
 	})
 
 	tp.Channel <- *span
-
 	return ctx, span
 }
 
@@ -91,4 +116,12 @@ func (tp *TraceProvider) Shutdown() error {
 	tp.KillSwitch = true
 	<-tp.ShutdownChannel
 	return nil
+}
+
+// func InjectIntoContext(ctx *context.Context, contextHeader ContextHeader) {
+// 	*ctx = context.WithValue(*ctx, TRACE_HEADER, contextHeader)
+// }
+
+func InjectIntoContext(ctx *context.Context, contextHeader ContextSpan) {
+	*ctx = context.WithValue(*ctx, TRACE_HEADER, contextHeader)
 }

@@ -10,7 +10,8 @@ import (
 )
 
 type Exporter struct {
-	Client agent.AgentClient
+	Client      agent.AgentClient
+	ServiceName string
 }
 
 type AgentConfig struct {
@@ -18,7 +19,7 @@ type AgentConfig struct {
 	Port int
 }
 
-func NewExporter(agentConfig AgentConfig) (*Exporter, error) {
+func NewExporter(serviceName string, agentConfig AgentConfig) (*Exporter, error) {
 	agentHost := fmt.Sprintf("%s:%d", agentConfig.Host, agentConfig.Port)
 
 	conn, err := grpc.Dial(agentHost, grpc.WithInsecure())
@@ -27,7 +28,8 @@ func NewExporter(agentConfig AgentConfig) (*Exporter, error) {
 	}
 
 	return &Exporter{
-		Client: agent.NewAgentClient(conn),
+		Client:      agent.NewAgentClient(conn),
+		ServiceName: serviceName,
 	}, nil
 }
 
@@ -37,6 +39,7 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 		SpanID:       span.SpanID.ToString(),
 		ParentSpanID: span.ParentSpanID.ToString(),
 		Name:         span.Name,
+		ServiceName:  e.ServiceName,
 		Timestamp: &agent.Timestamp{
 			Started:  "1",
 			Ended:    "1",
@@ -46,8 +49,8 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 
 	log.Printf("%s parent=%s span=%s trace=%s\n", span.Name, span.ParentSpanID.ToString(), span.SpanID.ToString(), span.TraceID.ToString())
 
-	_, err := e.Client.Send(ctx, &agentSpan)
-	if err != nil {
-		log.Fatal(err)
-	}
+	e.Client.Send(ctx, &agentSpan)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }

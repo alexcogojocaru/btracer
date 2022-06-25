@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	provider := trace.NewProvider("")
+	provider := trace.NewProvider("TestingMain")
 	defer provider.Shutdown()
 
 	ctx, _ := provider.Start(context.Background(), "Main")

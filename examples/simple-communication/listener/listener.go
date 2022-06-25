@@ -12,5 +12,5 @@ func ping(w http.ResponseWriter, req *http.Request) {
 
 func main() {
 	http.Handle("/ping", bhttp.NewHandler(ping, "Ping"))
-	http.ListenAndServe(":8090", nil)
+	http.ListenAndServe("0.0.0.0:8090", nil)
 }
