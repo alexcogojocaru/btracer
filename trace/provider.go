@@ -2,6 +2,7 @@ package trace
 
 import (
 	"context"
+	"encoding/hex"
 )
 
 const TRACE_HEADER = "TraceHeader"
@@ -28,8 +29,8 @@ type ContextHeader struct {
 }
 
 type ContextSpan struct {
-	TraceID  TID
-	SpanID   SID
+	TraceID  string
+	SpanID   string
 	SpanName string
 }
 
@@ -59,63 +60,70 @@ func NewProvider(serviceName string) *TraceProvider {
 
 func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Context, *Span) {
 	span := &Span{
-		Name: name,
+		Name:    name,
+		Channel: tp.Channel,
 	}
 
 	if ctx.Value(TRACE_HEADER) == nil {
 		traceToken := tp.Encoder.Compute(DEFAULT_TRACE_BYTES_SIZE)
-		// copy(tp.Trace.TraceID[:], traceToken)
-
-		// copy(span.ParentSpanID[:], NullSpanID[:])
-		// copy(span.TraceID[:], tp.Trace.TraceID[:])
-
 		copy(tp.Trace.TraceID[:], traceToken)
 		copy(span.ParentSpanID[:], NullSpanID[:])
 		copy(span.TraceID[:], traceToken)
 	} else {
-		// ctxValue := ctx.Value(TRACE_HEADER).(ContextHeader)
-		// copy(span.ParentSpanID[:], ctxValue.ParentSpan.SpanID[:])
-		// copy(span.TraceID[:], ctxValue.ParentSpan.TraceID[:])
-
 		spanContext := ctx.Value(TRACE_HEADER).(ContextSpan)
-		copy(span.ParentSpanID[:], spanContext.SpanID[:])
-		copy(span.TraceID[:], spanContext.TraceID[:])
+		span_id, _ := hex.DecodeString(spanContext.SpanID)
+		trace_id, _ := hex.DecodeString(spanContext.TraceID)
+
+		copy(span.ParentSpanID[:], span_id)
+		copy(span.TraceID[:], trace_id)
 	}
 
 	spanToken := tp.Encoder.Compute(DEFAULT_SPAN_BYTES_SIZE)
 	copy(span.SpanID[:], spanToken)
 
-	// InjectIntoContext(&ctx, ContextHeader{
-	// 	Trace:      tp.Trace,
-	// 	ParentSpan: *span,
-	// 	SpanName:   name,
-	// })
-
+	ctxTraceID := hex.EncodeToString(tp.Trace.TraceID[:])
+	ctxSpanID := hex.EncodeToString(span.SpanID[:])
 	InjectIntoContext(&ctx, ContextSpan{
-		TraceID:  tp.Trace.TraceID,
-		SpanID:   span.SpanID,
-		SpanName: name,
+		TraceID: ctxTraceID,
+		SpanID:  ctxSpanID,
 	})
 
-	tp.Channel <- *span
+	// tp.Channel <- *span
+	span.Start()
 	return ctx, span
 }
 
 func (tp *TraceProvider) Stream() {
 	for {
-		span := <-tp.Channel
-		tp.Exporter.ExportSpan(context.Background(), span)
+		// span := <-tp.Channel
+		// tp.Exporter.ExportSpan(context.Background(), span)
 
-		if tp.KillSwitch == true {
-			tp.ShutdownChannel <- true
+		// if tp.KillSwitch == true {
+		// 	tp.ShutdownChannel <- true
+		// }
+
+		// non-blocking channel fetch
+		select {
+		case span := <-tp.Channel:
+			tp.Exporter.ExportSpan(context.Background(), span)
+		default:
+			// no message received
+			if tp.KillSwitch == true {
+				tp.ShutdownChannel <- true
+			}
 		}
 	}
 }
 
 func (tp *TraceProvider) Shutdown() error {
 	tp.KillSwitch = true
-	<-tp.ShutdownChannel
-	return nil
+
+	for {
+		select {
+		case <-tp.ShutdownChannel:
+			return nil
+		}
+	}
 }
 
 // func InjectIntoContext(ctx *context.Context, contextHeader ContextHeader) {

@@ -18,12 +18,10 @@ func main() {
 	provider := trace.NewProvider("Caller_v1.0")
 	defer provider.Shutdown()
 
-	// provider.Start(context.Background(), "Caller_Main")
-	ctx, _ := provider.Start(context.Background(), "Caller_Main")
+	ctx, span := provider.Start(context.Background(), "Caller_Main")
+	defer span.End()
+
 	propagator.Inject(ctx, req)
-
 	client.Do(req)
-
-	// span := ctx.Value("TraceHeader").(trace.ContextHeader).ParentSpan.SpanID
-	// log.Print(span.ToString())
+	client.Do(req)
 }

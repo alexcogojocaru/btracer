@@ -41,9 +41,9 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 		Name:         span.Name,
 		ServiceName:  e.ServiceName,
 		Timestamp: &agent.Timestamp{
-			Started:  "1",
-			Ended:    "1",
-			Duration: 1,
+			Started:  span.StartTime.String(),
+			Ended:    span.EndTime.String(),
+			Duration: float32(span.Duration),
 		},
 	}
 
