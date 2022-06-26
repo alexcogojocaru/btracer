@@ -23,5 +23,4 @@ func main() {
 
 	propagator.Inject(ctx, req)
 	client.Do(req)
-	client.Do(req)
 }

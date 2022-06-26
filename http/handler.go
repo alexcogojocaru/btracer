@@ -31,7 +31,7 @@ func NewHandler(handler http.HandlerFunc, operation string) http.Handler {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := h.Propagator.Extract(req.Context(), req.Header)
 	_, span := h.Provider.Start(ctx, h.Operation)
-	span.End()
 
-	h.Handler.ServeHTTP(w, req)
+	h.Handler.ServeHTTP(w, req.WithContext(ctx))
+	span.End()
 }

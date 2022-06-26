@@ -6,6 +6,7 @@ import (
 )
 
 const TRACE_HEADER = "TraceHeader"
+const NO_AGENT = false
 
 type Provider interface {
 	Start(ctx context.Context, name string) (context.Context, *Span)
@@ -20,6 +21,7 @@ type TraceProvider struct {
 	Channel         chan Span
 	ShutdownChannel chan bool
 	Exporter        *Exporter
+	BypassAgent     bool
 }
 
 type ContextHeader struct {
@@ -49,6 +51,7 @@ func NewProvider(serviceName string) *TraceProvider {
 		ShutdownChannel: make(chan bool, 0),
 		KillSwitch:      false,
 		Exporter:        exporter,
+		BypassAgent:     false,
 	}
 
 	go func() {
@@ -88,24 +91,18 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 		SpanID:  ctxSpanID,
 	})
 
-	// tp.Channel <- *span
 	span.Start()
 	return ctx, span
 }
 
 func (tp *TraceProvider) Stream() {
 	for {
-		// span := <-tp.Channel
-		// tp.Exporter.ExportSpan(context.Background(), span)
-
-		// if tp.KillSwitch == true {
-		// 	tp.ShutdownChannel <- true
-		// }
-
 		// non-blocking channel fetch
 		select {
 		case span := <-tp.Channel:
-			tp.Exporter.ExportSpan(context.Background(), span)
+			if tp.BypassAgent == false {
+				tp.Exporter.ExportSpan(context.Background(), span)
+			}
 		default:
 			// no message received
 			if tp.KillSwitch == true {
@@ -125,10 +122,6 @@ func (tp *TraceProvider) Shutdown() error {
 		}
 	}
 }
-
-// func InjectIntoContext(ctx *context.Context, contextHeader ContextHeader) {
-// 	*ctx = context.WithValue(*ctx, TRACE_HEADER, contextHeader)
-// }
 
 func InjectIntoContext(ctx *context.Context, contextHeader ContextSpan) {
 	*ctx = context.WithValue(*ctx, TRACE_HEADER, contextHeader)
