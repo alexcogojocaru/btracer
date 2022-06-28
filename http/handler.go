@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/alexcogojocaru/btracer/propagation"
@@ -31,6 +32,8 @@ func NewHandler(handler http.HandlerFunc, operation string) http.Handler {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := h.Propagator.Extract(req.Context(), req.Header)
 	_, span := h.Provider.Start(ctx, h.Operation)
+
+	ctx = context.WithValue(ctx, "provider", h.Provider)
 
 	h.Handler.ServeHTTP(w, req.WithContext(ctx))
 	span.End()

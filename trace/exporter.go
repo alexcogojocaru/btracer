@@ -50,7 +50,4 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 	log.Printf("%s parent=%s span=%s trace=%s\n", span.Name, span.ParentSpanID.ToString(), span.SpanID.ToString(), span.TraceID.ToString())
 
 	e.Client.Send(ctx, &agentSpan)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 }

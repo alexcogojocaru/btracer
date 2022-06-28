@@ -11,11 +11,15 @@ func main() {
 	provider := trace.NewProvider("TestingMain")
 	defer provider.Shutdown()
 
-	_, span := provider.Start(context.Background(), "Main")
+	ctx, span := provider.Start(context.Background(), "Main")
 	time.Sleep(5 * time.Millisecond)
 	defer span.End()
-	// provider.Start(ctx, "SecondMain")
-	// ctx3, _ := provider.Start(ctx, "ThirdMain")
-	// ctx4, _ := provider.Start(ctx3, "FourthMain")
-	// provider.Start(ctx4, "FifthMain")
+
+	ctx3, span3 := provider.Start(ctx, "ThirdMain")
+	defer span3.End()
+
+	ctx4, span4 := provider.Start(ctx3, "FourthMain")
+	defer span4.End()
+	_, span5 := provider.Start(ctx4, "FifthMain")
+	defer span5.End()
 }
