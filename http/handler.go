@@ -31,9 +31,9 @@ func NewHandler(handler http.HandlerFunc, operation string) http.Handler {
 // this is a middleware: every request passes through this function
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := h.Propagator.Extract(req.Context(), req.Header)
-	_, span := h.Provider.Start(ctx, h.Operation)
+	spanCtx, span := h.Provider.Start(ctx, h.Operation)
 
-	ctx = context.WithValue(ctx, "provider", h.Provider)
+	ctx = context.WithValue(spanCtx, "provider", h.Provider)
 
 	h.Handler.ServeHTTP(w, req.WithContext(ctx))
 	span.End()

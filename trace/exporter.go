@@ -45,6 +45,7 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 			Ended:    span.EndTime.String(),
 			Duration: float32(span.Duration),
 		},
+		Logs: span.Logs,
 	}
 
 	log.Printf("%s parent=%s span=%s trace=%s\n", span.Name, span.ParentSpanID.ToString(), span.SpanID.ToString(), span.TraceID.ToString())

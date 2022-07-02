@@ -77,6 +77,7 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 		span_id, _ := hex.DecodeString(spanContext.SpanID)
 		trace_id, _ := hex.DecodeString(spanContext.TraceID)
 
+		copy(tp.Trace.TraceID[:], trace_id)
 		copy(span.ParentSpanID[:], span_id)
 		copy(span.TraceID[:], trace_id)
 	}
