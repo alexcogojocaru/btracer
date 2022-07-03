@@ -3,6 +3,7 @@ package trace
 import (
 	"context"
 	"encoding/hex"
+	"log"
 )
 
 const TRACE_HEADER = "TraceHeader"
@@ -31,9 +32,10 @@ type ContextHeader struct {
 }
 
 type ContextSpan struct {
-	TraceID  string
-	SpanID   string
-	SpanName string
+	TraceID     string
+	SpanID      string
+	SpanName    string
+	ServiceName string
 }
 
 func NewProvider(serviceName string) *TraceProvider {
@@ -77,6 +79,9 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 		span_id, _ := hex.DecodeString(spanContext.SpanID)
 		trace_id, _ := hex.DecodeString(spanContext.TraceID)
 
+		log.Printf("%s %s", spanContext.ServiceName, tp.ServiceName)
+		tp.ServiceName = spanContext.ServiceName
+
 		copy(tp.Trace.TraceID[:], trace_id)
 		copy(span.ParentSpanID[:], span_id)
 		copy(span.TraceID[:], trace_id)
@@ -88,10 +93,13 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 	ctxTraceID := hex.EncodeToString(tp.Trace.TraceID[:])
 	ctxSpanID := hex.EncodeToString(span.SpanID[:])
 	InjectIntoContext(&ctx, ContextSpan{
-		TraceID: ctxTraceID,
-		SpanID:  ctxSpanID,
+		TraceID:     ctxTraceID,
+		SpanID:      ctxSpanID,
+		SpanName:    name,
+		ServiceName: tp.ServiceName,
 	})
 
+	span.ServiceName = tp.ServiceName
 	span.Start()
 	return ctx, span
 }

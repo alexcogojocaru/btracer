@@ -17,6 +17,7 @@ type Span struct {
 	TraceID      TID
 	SpanID       SID
 	ParentSpanID SID
+	ServiceName  string
 	Channel      chan Span
 	Name         string
 	StartTime    time.Time

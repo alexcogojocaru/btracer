@@ -39,7 +39,7 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 		SpanID:       span.SpanID.ToString(),
 		ParentSpanID: span.ParentSpanID.ToString(),
 		Name:         span.Name,
-		ServiceName:  e.ServiceName,
+		ServiceName:  span.ServiceName,
 		Timestamp: &agent.Timestamp{
 			Started:  span.StartTime.String(),
 			Ended:    span.EndTime.String(),

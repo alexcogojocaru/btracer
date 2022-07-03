@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/alexcogojocaru/btracer/propagation"
@@ -31,6 +32,7 @@ func NewHandler(handler http.HandlerFunc, operation string) http.Handler {
 // this is a middleware: every request passes through this function
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := h.Propagator.Extract(req.Context(), req.Header)
+	log.Printf("Received %s name", ctx.Value(trace.TRACE_HEADER).(trace.ContextSpan).ServiceName)
 	spanCtx, span := h.Provider.Start(ctx, h.Operation)
 
 	ctx = context.WithValue(spanCtx, "provider", h.Provider)
