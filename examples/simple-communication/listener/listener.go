@@ -10,6 +10,7 @@ import (
 func ping(w http.ResponseWriter, req *http.Request) {
 	provider := req.Context().Value("provider").(*trace.TraceProvider)
 	ctx, span := provider.Start(req.Context(), "PingRoute")
+	span.AddLog("ERROR", "Wrong Context")
 	span.End()
 
 	_, span2 := provider.Start(ctx, "PingSubRoute")

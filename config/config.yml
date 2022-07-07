@@ -1,0 +1,8 @@
+agent:
+  host: localhost
+  port: 4576
+  bypass: true
+
+collector:
+  host: localhost
+  port: 4578

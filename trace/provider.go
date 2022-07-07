@@ -38,13 +38,20 @@ type ContextSpan struct {
 	ServiceName string
 }
 
-func NewProvider(serviceName string) *TraceProvider {
+func NewProvider(serviceName string, config ExporterConfig) *TraceProvider {
+	if config == (ExporterConfig{}) {
+		config = ExporterConfig{
+			AgentConfig: ConnectionDetails{
+				Host: "localhost",
+				Port: 4576,
+			},
+			Bypass: false,
+		}
+	}
+
 	exporter, _ := NewExporter(
 		serviceName,
-		AgentConfig{
-			Host: "localhost",
-			Port: 4576,
-		},
+		config,
 	)
 
 	tp := &TraceProvider{
@@ -109,9 +116,7 @@ func (tp *TraceProvider) Stream() {
 		// non-blocking channel fetch
 		select {
 		case span := <-tp.Channel:
-			if tp.BypassAgent == false {
-				tp.Exporter.ExportSpan(context.Background(), span)
-			}
+			tp.Exporter.ExportSpan(context.Background(), span)
 		default:
 			// no message received
 			if tp.KillSwitch == true {

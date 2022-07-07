@@ -19,7 +19,7 @@ type Handler struct {
 }
 
 func NewHandler(handler http.HandlerFunc, operation string) http.Handler {
-	provider := trace.NewProvider("Listener")
+	provider := trace.NewProvider("Listener", trace.ExporterConfig{})
 
 	return &Handler{
 		Handler:    handler,
