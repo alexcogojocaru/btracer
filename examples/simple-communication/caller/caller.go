@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/alexcogojocaru/btracer/config"
@@ -62,4 +64,19 @@ func main() {
 	time.Sleep(3)
 	_, tempSpan0 := provider.Start(ctxTemp, "TempCall")
 	defer tempSpan0.End()
+
+	contextList := []context.Context{ctx, dbCtx, ctxTemp}
+	for idx := 0; idx < 10; idx++ {
+		ctxIdx := rand.Intn(len(contextList))
+
+		localContext, localSpan := provider.Start(contextList[ctxIdx], fmt.Sprintf("InsideLoop-%d", idx))
+		defer localSpan.End()
+
+		for logIdx := 0; logIdx < 4; logIdx++ {
+			localSpan.AddLog("INFO", fmt.Sprintf("Log generated inside loop %d-%d", idx, logIdx))
+		}
+
+		contextList = append(contextList, localContext)
+	}
+
 }
