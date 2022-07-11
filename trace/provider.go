@@ -16,6 +16,7 @@ type Provider interface {
 
 type TraceProvider struct {
 	ServiceName     string
+	InitServiceName string
 	Trace           Trace
 	Encoder         Encoder
 	KillSwitch      bool
@@ -56,6 +57,7 @@ func NewProvider(serviceName string, config ExporterConfig) *TraceProvider {
 
 	tp := &TraceProvider{
 		ServiceName:     serviceName,
+		InitServiceName: serviceName,
 		Channel:         make(chan Span),
 		ShutdownChannel: make(chan bool, 0),
 		KillSwitch:      false,
@@ -72,8 +74,9 @@ func NewProvider(serviceName string, config ExporterConfig) *TraceProvider {
 
 func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Context, *Span) {
 	span := &Span{
-		Name:    name,
-		Channel: tp.Channel,
+		Name:        name,
+		Channel:     tp.Channel,
+		ServiceName: tp.InitServiceName,
 	}
 
 	if ctx.Value(TRACE_HEADER) == nil {
@@ -106,7 +109,7 @@ func (tp *TraceProvider) Start(ctx context.Context, name string) (context.Contex
 		ServiceName: tp.ServiceName,
 	})
 
-	span.ServiceName = tp.ServiceName
+	span.TraceService = tp.ServiceName
 	span.Start()
 	return ctx, span
 }

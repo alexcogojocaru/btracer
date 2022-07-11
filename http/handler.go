@@ -18,8 +18,8 @@ type Handler struct {
 	Provider   *trace.TraceProvider
 }
 
-func NewHandler(handler http.HandlerFunc, operation string) http.Handler {
-	provider := trace.NewProvider("Listener", trace.ExporterConfig{})
+func NewHandler(handler http.HandlerFunc, operation string, serviceName string) http.Handler {
+	provider := trace.NewProvider(serviceName, trace.ExporterConfig{})
 
 	return &Handler{
 		Handler:    handler,

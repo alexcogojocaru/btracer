@@ -60,6 +60,7 @@ func (e *Exporter) ExportSpan(ctx context.Context, span Span) {
 		ParentSpanID: span.ParentSpanID.ToString(),
 		Name:         span.Name,
 		ServiceName:  span.ServiceName,
+		TraceService: span.TraceService,
 		Timestamp: &proxy.Timestamp{
 			Started:  span.StartTime.String(),
 			Ended:    span.EndTime.String(),

@@ -41,7 +41,7 @@ func main() {
 		}
 	}
 
-	provider := trace.NewProvider("CallerTesting1", exporterConfig)
+	provider := trace.NewProvider("Caller_Microservice", exporterConfig)
 	defer provider.Shutdown()
 
 	ctx, span := provider.Start(context.Background(), "Caller_Main")
@@ -72,11 +72,10 @@ func main() {
 		localContext, localSpan := provider.Start(contextList[ctxIdx], fmt.Sprintf("InsideLoop-%d", idx))
 		defer localSpan.End()
 
-		for logIdx := 0; logIdx < 4; logIdx++ {
+		for logIdx := 0; logIdx < rand.Intn(4); logIdx++ {
 			localSpan.AddLog("INFO", fmt.Sprintf("Log generated inside loop %d-%d", idx, logIdx))
 		}
 
 		contextList = append(contextList, localContext)
 	}
-
 }
