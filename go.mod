@@ -11,8 +11,8 @@ require (
 require (
 	github.com/golang/protobuf v1.5.0 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
-	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
-	golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7 // indirect
-	golang.org/x/text v0.3.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 )
